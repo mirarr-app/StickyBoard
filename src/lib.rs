@@ -5,3 +5,4 @@ pub mod db;
 pub mod hyprland;
 pub mod ipc;
 pub mod daemon;
+pub mod capture;
