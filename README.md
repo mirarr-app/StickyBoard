@@ -4,7 +4,7 @@ StickyBoard is a lightweight sticky notes system designed specifically for Omarc
 
 StickyBoard is built using GTK4, SQLite, Tokio, and native Hyprland IPC.
 
-### Quick Install
+### Omarchy Quick Install
 
 Install all binaries, default fonts, systemd user services, and automatically configure keybindings and window rules in a single command:
 ```bash
