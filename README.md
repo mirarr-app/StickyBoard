@@ -9,11 +9,9 @@ StickyBoard is built using GTK4, SQLite, Tokio, and native Hyprland IPC.
 ## Features
 
 - **Instant Note Capture**: Press `SUPER+SHIFT+K` to open a centered input popup, type your note, and hit `Enter` to spawn it instantly.
-- **Dedicated Corkboard**: Automatically routes and manages all note windows on workspace 6.
-- **Geometry Recovery**: Changes to note positions and sizes are autosaved and survive system reboots or Hyprland/daemon restarts. Notes are read-only and static once created to keep workspace 6 clean.
+- **Dedicated Corkboard**: Automatically routes and manages all note windows on workspace 6 by default.
+- **Geometry Recovery**: Changes to note positions and sizes are autosaved and survive system reboots or Hyprland/daemon restarts. Notes are read-only and static once created to keep workspace clean.
 - **Omarchy System Theme Integration**: Note colors are loaded dynamically from your active Omarchy system theme (`~/.config/omarchy/current/theme/colors.toml`) and hot-reload instantly when the theme is changed.
-- **Custom App Font**: Bundles and automatically installs the handwriting-style `Excalifont` (`Excalifont-Regular.ttf`) for premium, state-of-the-art aesthetics.
-- **Minimalist Design**: Zero title bars or menu bars, transparent backgrounds, rounded corners, and smooth interactions.
 
 ---
 
