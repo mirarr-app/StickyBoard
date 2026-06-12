@@ -29,5 +29,5 @@ package() {
   install -Dm644 stickyboard.service "${pkgdir}"/usr/lib/systemd/user/stickyboard.service
 
   # Install default app font
-  install -Dm644 excalifont.woff2 "${pkgdir}"/usr/share/fonts/excalifont/excalifont.woff2
+  install -Dm644 Excalifont-Regular.woff2 "${pkgdir}"/usr/share/fonts/excalifont/Excalifont-Regular.woff2
 }
