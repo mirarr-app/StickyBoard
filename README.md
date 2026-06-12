@@ -60,9 +60,9 @@ sudo cp target/release/stickyboard* /usr/bin/
 Alternatively, customize the provided `PKGBUILD.example` to build and install StickyBoard as an Arch package.
 
 #### Option B: Download Prebuilt Binaries (One-Liner Install)
-You can download the latest prebuilt package, install all binaries and the default font, update your font cache, append the window rules to `autostart.conf`, and add the keyboard shortcut to `bindings.conf` in a single command:
+You can download the latest prebuilt release, install all binaries, configurations, systemd services, fonts, and registers hotkeys automatically:
 ```bash
-sh -c 'tmp=$(mktemp -d); curl -sL https://github.com/mirarr-app/StickyBoard/releases/latest/download/stickyboard-linux-x86_64.tar.gz | tar -xz -C "$tmp" && sudo cp "$tmp"/stickyboard* /usr/bin/ && mkdir -p ~/.local/share/fonts && cp "$tmp"/Excalifont-Regular.ttf ~/.local/share/fonts/ && fc-cache -f ~/.local/share/fonts/ && cat "$tmp"/hyprland.conf.example >> ~/.config/hypr/autostart.conf && echo -e "\nbindd = SUPER SHIFT, K, Launch StickyBoard Capture, exec, stickyboard capture" >> ~/.config/hypr/bindings.conf && rm -rf "$tmp"'
+curl -sL https://raw.githubusercontent.com/mirarr-app/StickyBoard/main/install.sh | bash
 ```
 
 Alternatively, to install manually:
@@ -91,7 +91,7 @@ systemctl --user enable --now stickyboard.service
 1. Append the window rules from [hyprland.conf.example](file:///home/parsa/Work/osticky/hyprland.conf.example) to your `~/.config/hypr/hyprland.conf` (directs note windows to workspace 6, makes them floating, and configures the capture popup).
 2. Add the global hotkey binding to your Omarchy keybindings configuration file at `~/.config/hypr/bindings.conf`:
    ```hyprland
-   bindd = SUPER SHIFT, K, Launch StickyBoard Capture, exec, stickyboard capture
+   bindd = SUPER SHIFT, K, Launch StickyBoard Capture, exec, stickyboard-capture
    ```
 
 Run `hyprctl reload` to apply rules.
