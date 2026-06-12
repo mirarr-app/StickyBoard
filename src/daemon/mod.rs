@@ -112,14 +112,22 @@ async fn process_request(request: IpcRequest, state: Arc<DaemonState>) -> IpcRes
     match request {
         IpcRequest::NewNote {
             text,
-            color,
+            color: _,
             pos_x,
             pos_y,
             width,
             height,
         } => {
             let mut db = state.db.lock().await;
-            
+
+            // Generate a random color from the list
+            let colors = ["yellow", "blue", "green", "pink", "orange"];
+            let seed = std::time::SystemTime::now()
+                .duration_since(std::time::SystemTime::UNIX_EPOCH)
+                .map(|d| d.as_micros())
+                .unwrap_or(0);
+            let final_color = colors[(seed % colors.len() as u128) as usize];
+
             // If coordinates are default (e.g. 100, 100), we offset based on count
             let (mut final_x, mut final_y) = (pos_x, pos_y);
             if pos_x == 100 && pos_y == 100 {
@@ -130,7 +138,7 @@ async fn process_request(request: IpcRequest, state: Arc<DaemonState>) -> IpcRes
                 }
             }
 
-            match db.create_note(&text, &color, final_x, final_y, width, height) {
+            match db.create_note(&text, final_color, final_x, final_y, width, height) {
                 Ok(id) => {
                     log_info!("Created note id={}", id);
                     // Spawn the note window process

@@ -182,12 +182,6 @@ fn build_ui(app: &gtk::Application, id: i64) {
         .css_classes(vec!["top-bar".to_string()])
         .build();
 
-    // Color button
-    let color_btn = gtk::Button::builder()
-        .label("🎨")
-        .css_classes(vec!["top-bar-btn".to_string()])
-        .build();
-
     // Delete button
     let delete_btn = gtk::Button::builder()
         .label("✕")
@@ -200,7 +194,6 @@ fn build_ui(app: &gtk::Application, id: i64) {
         .hexpand(true)
         .build();
 
-    top_bar.append(&color_btn);
     top_bar.append(&drag_spacer);
     top_bar.append(&delete_btn);
     top_bar_handle.set_child(Some(&top_bar));
@@ -228,61 +221,7 @@ fn build_ui(app: &gtk::Application, id: i64) {
 
     // 1. Window Drag (handled automatically by GtkWindowHandle)
 
-    // 2. Color Popover picker
-    let popover = gtk::Popover::new();
-    let popover_box = gtk::Box::builder()
-        .orientation(gtk::Orientation::Horizontal)
-        .css_classes(vec!["color-popover-box".to_string()])
-        .build();
-
-    let colors = vec!["yellow", "blue", "green", "pink", "orange"];
-    for color_name in colors {
-        let color_circle = gtk::Button::builder()
-            .css_classes(vec!["color-circle".to_string(), color_name.to_string()])
-            .build();
-
-        let state_clone = state.clone();
-        let container_weak = container.downgrade();
-        let popover_weak = popover.downgrade();
-        let text_view_weak = text_view.downgrade();
-
-        color_circle.connect_clicked(move |_| {
-            let current_color = state_clone.color.borrow().clone();
-            
-            // Update CSS
-            if let Some(cont) = container_weak.upgrade() {
-                cont.remove_css_class(&format!("note-{}", current_color));
-                cont.add_css_class(&format!("note-{}", color_name));
-            }
-
-            // Update State
-            state_clone.color.replace(color_name.to_string());
-
-            // Save to DB via IPC
-            let view = text_view_weak.upgrade().unwrap();
-            let text = get_text_view_content(&view);
-            send_update_ipc(
-                state_clone.id,
-                &text,
-                color_name,
-                state_clone.pos_x.get(),
-                state_clone.pos_y.get(),
-                state_clone.width.get(),
-                state_clone.height.get(),
-            );
-
-            // Close popover
-            if let Some(p) = popover_weak.upgrade() {
-                p.popdown();
-            }
-        });
-        popover_box.append(&color_circle);
-    }
-    popover.set_child(Some(&popover_box));
-    popover.set_parent(&color_btn);
-    color_btn.connect_clicked(move |_| {
-        popover.popup();
-    });
+    // 2. Color Popover picker (removed)
 
     // 3. Delete Button event
     let window_weak = window.downgrade();

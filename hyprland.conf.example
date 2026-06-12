@@ -11,7 +11,6 @@ windowrule {
     match:class = com\.stickyboard\.note.*
     workspace = 6
     float = on
-    pin = on
     no_anim = on
 }
 
