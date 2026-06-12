@@ -53,11 +53,27 @@ This produces the following binaries in `target/release/`:
 ## Installation & Setup
 
 ### 1. Install Binaries
-You can copy the compiled binaries to `/usr/bin/` manually:
+#### Option A: Build from Source
+Compile the binaries and copy them manually:
 ```bash
+cargo build --release
 sudo cp target/release/stickyboard* /usr/bin/
 ```
 Alternatively, customize the provided `PKGBUILD.example` to build and install StickyBoard as an Arch package.
+
+#### Option B: Download Prebuilt Binaries
+If you prefer not to compile from source, download the latest release archive (`stickyboard-linux-x86_64.tar.gz`) from GitHub Releases.
+
+Decompress the archive and copy the binaries to `/usr/bin/`:
+```bash
+tar -xzvf stickyboard-linux-x86_64.tar.gz
+sudo cp stickyboard stickyboard-daemon stickyboard-capture stickyboard-note /usr/bin/
+
+# Install the bundled default font
+mkdir -p ~/.local/share/fonts
+cp Excalifont-Regular.ttf ~/.local/share/fonts/
+fc-cache -f ~/.local/share/fonts/
+```
 
 ### 2. Configure Systemd User Service
 Install and enable the Systemd user service so the daemon starts automatically with your session:
