@@ -77,7 +77,6 @@ struct NoteState {
     pos_y: Cell<i32>,
     width: Cell<i32>,
     height: Cell<i32>,
-    timeout_id: RefCell<Option<glib::SourceId>>,
 }
 
 pub fn run() {
@@ -154,7 +153,6 @@ fn build_ui(app: &gtk::Application, id: i64) {
         pos_y: Cell::new(note.pos_y),
         width: Cell::new(note.width),
         height: Cell::new(note.height),
-        timeout_id: RefCell::new(None),
     });
 
     // Create the Window
@@ -211,6 +209,8 @@ fn build_ui(app: &gtk::Application, id: i64) {
     let text_view = gtk::TextView::builder()
         .wrap_mode(gtk::WrapMode::WordChar)
         .css_classes(vec!["note-text-view".to_string()])
+        .editable(false)
+        .focusable(false)
         .build();
 
     text_view.buffer().set_text(&state.text.borrow());
@@ -247,43 +247,7 @@ fn build_ui(app: &gtk::Application, id: i64) {
         }
     });
 
-    // 4. Autosave (Debounced Text changed)
-    let state_clone = state.clone();
-    let text_view_weak = text_view.downgrade();
-    text_view.buffer().connect_changed(move |_| {
-        // Cancel previous timeout
-        if let Some(source_id) = state_clone.timeout_id.borrow_mut().take() {
-            source_id.remove();
-        }
-
-        // Schedule new timeout (500ms debounce)
-        let state_sub = state_clone.clone();
-        let view_weak = text_view_weak.clone();
-
-        let state_closure = state_sub.clone();
-        let source_id = glib::timeout_add_local(
-            std::time::Duration::from_millis(500),
-            move || {
-                if let Some(view) = view_weak.upgrade() {
-                    let text = get_text_view_content(&view);
-                    state_closure.text.replace(text.clone());
-
-                    send_update_ipc(
-                        state_closure.id,
-                        &text,
-                        &state_closure.color.borrow(),
-                        state_closure.pos_x.get(),
-                        state_closure.pos_y.get(),
-                        state_closure.width.get(),
-                        state_closure.height.get(),
-                    );
-                }
-                glib::ControlFlow::Break
-            },
-        );
-
-        state_sub.timeout_id.replace(Some(source_id));
-    });
+    // 4. Autosave (removed: notes are read-only)
 
     window.present();
 
