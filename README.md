@@ -61,19 +61,24 @@ sudo cp target/release/stickyboard* /usr/bin/
 ```
 Alternatively, customize the provided `PKGBUILD.example` to build and install StickyBoard as an Arch package.
 
-#### Option B: Download Prebuilt Binaries
-If you prefer not to compile from source, download the latest release archive (`stickyboard-linux-x86_64.tar.gz`) from GitHub Releases.
-
-Decompress the archive and copy the binaries to `/usr/bin/`:
+#### Option B: Download Prebuilt Binaries (One-Liner Install)
+You can download the latest prebuilt package, copy all binaries and the default font, and update your font cache in a single command:
 ```bash
-tar -xzvf stickyboard-linux-x86_64.tar.gz
-sudo cp stickyboard stickyboard-daemon stickyboard-capture stickyboard-note /usr/bin/
-
-# Install the bundled default font
-mkdir -p ~/.local/share/fonts
-cp Excalifont-Regular.ttf ~/.local/share/fonts/
-fc-cache -f ~/.local/share/fonts/
+sh -c 'tmp=$(mktemp -d); curl -sL https://github.com/mirarr-app/StickyBoard/releases/latest/download/stickyboard-linux-x86_64.tar.gz | tar -xz -C "$tmp" && sudo cp "$tmp"/stickyboard* /usr/bin/ && mkdir -p ~/.local/share/fonts && cp "$tmp"/Excalifont-Regular.ttf ~/.local/share/fonts/ && fc-cache -f ~/.local/share/fonts/ && rm -rf "$tmp"'
 ```
+
+Alternatively, to install manually:
+1. Download the release archive `stickyboard-linux-x86_64.tar.gz` from the [GitHub Releases Page](https://github.com/mirarr-app/StickyBoard/releases).
+2. Extract the archive and copy components:
+   ```bash
+   tar -xzvf stickyboard-linux-x86_64.tar.gz
+   sudo cp stickyboard stickyboard-daemon stickyboard-capture stickyboard-note /usr/bin/
+
+   # Install the bundled default font
+   mkdir -p ~/.local/share/fonts
+   cp Excalifont-Regular.ttf ~/.local/share/fonts/
+   fc-cache -f ~/.local/share/fonts/
+   ```
 
 ### 2. Configure Systemd User Service
 Install and enable the Systemd user service so the daemon starts automatically with your session:

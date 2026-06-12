@@ -4,11 +4,11 @@ pkgver=0.1.0
 pkgrel=1
 pkgdesc="A lightweight, floating sticky note corkboard system for Hyprland workspace 6"
 arch=('x86_64')
-url="https://github.com/example/stickyboard"
+url="https://github.com/mirarr-app/StickyBoard"
 license=('MIT')
 depends=('gtk4' 'sqlite')
 makedepends=('cargo')
-source=("git+https://github.com/example/stickyboard.git")
+source=("git+https://github.com/mirarr-app/StickyBoard.git")
 sha256sums=('SKIP')
 
 build() {
