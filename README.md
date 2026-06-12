@@ -20,6 +20,12 @@ curl -sL https://raw.githubusercontent.com/mirarr-app/StickyBoard/main/install.s
 - **Geometry Recovery**: Changes to note positions and sizes are autosaved and survive system reboots or Hyprland/daemon restarts. Notes are read-only and static once created to keep workspace clean.
 - **Omarchy System Theme Integration**: Note colors are loaded dynamically from your active Omarchy system theme (`~/.config/omarchy/current/theme/colors.toml`) and hot-reload instantly when the theme is changed.
 
+
+
+https://github.com/user-attachments/assets/319e65e9-3a7f-4889-8004-56b2b5a5456d
+
+
+
 ---
 
 ## System Architecture
