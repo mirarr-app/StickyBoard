@@ -247,6 +247,8 @@ fn build_ui(app: &gtk::Application, id: i64) {
         .focusable(false)
         .build();
 
+    text_view.set_cursor_from_name(Some("default"));
+
     text_view.buffer().set_text(&state.text.borrow());
     scrolled.set_child(Some(&text_view));
     container.append(&scrolled);
