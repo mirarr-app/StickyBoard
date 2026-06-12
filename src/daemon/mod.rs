@@ -3,8 +3,8 @@ use std::fs;
 use std::sync::Arc;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::net::{UnixListener, UnixStream};
-use tokio::process::Child;
 use tokio::sync::Mutex;
+use tokio::sync::oneshot::Sender as OneshotSender;
 
 use crate::config::{find_bin_path, get_socket_path};
 use crate::db::Db;
@@ -13,7 +13,7 @@ use crate::{log_error, log_info};
 
 pub struct DaemonState {
     db: Arc<Mutex<Db>>,
-    running_notes: Arc<Mutex<HashMap<i64, Child>>>,
+    running_notes: Arc<Mutex<HashMap<i64, OneshotSender<()>>>>,
 }
 
 pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
@@ -166,9 +166,9 @@ async fn process_request(request: IpcRequest, state: Arc<DaemonState>) -> IpcRes
                     log_info!("Deleted note id={} (from_window={})", id, from_window);
                     // Kill the child window process only if it is not the window itself closing
                     let mut running = state.running_notes.lock().await;
-                    if let Some(mut child) = running.remove(&id) {
+                    if let Some(kill_tx) = running.remove(&id) {
                         if !from_window {
-                            let _ = child.kill().await;
+                            let _ = kill_tx.send(());
                         }
                     }
                     IpcResponse::Ok
@@ -227,8 +227,8 @@ async fn process_request(request: IpcRequest, state: Arc<DaemonState>) -> IpcRes
         IpcRequest::HideAll => {
             let mut running = state.running_notes.lock().await;
             log_info!("Killing all {} running note processes", running.len());
-            for (_, mut child) in running.drain() {
-                let _ = child.kill().await;
+            for (_, kill_tx) in running.drain() {
+                let _ = kill_tx.send(());
             }
             IpcResponse::Ok
         }
@@ -237,8 +237,8 @@ async fn process_request(request: IpcRequest, state: Arc<DaemonState>) -> IpcRes
             {
                 let mut running = state.running_notes.lock().await;
                 log_info!("Reloading: killing {} running note processes", running.len());
-                for (_, mut child) in running.drain() {
-                    let _ = child.kill().await;
+                for (_, kill_tx) in running.drain() {
+                    let _ = kill_tx.send(());
                 }
             }
             // Spawn them fresh
@@ -270,22 +270,26 @@ async fn spawn_all_notes(state: Arc<DaemonState>) -> Result<(), Box<dyn std::err
     for note in notes {
         if !running.contains_key(&note.id) {
             match spawn_note_process_internal(note.id) {
-                Ok(child) => {
+                Ok(mut child) => {
                     let note_id = note.id;
+                    let (kill_tx, kill_rx) = tokio::sync::oneshot::channel::<()>();
+                    running.insert(note_id, kill_tx);
+                    
                     let running_notes_clone = state.running_notes.clone();
                     
                     // Spawn supervisor task
-                    let child_to_wait = child;
-                    running.insert(note_id, child_to_wait);
-                    
-                    // We must spawn a task to wait on the child so we clean up when it exits
                     tokio::spawn(async move {
-                        let mut map = running_notes_clone.lock().await;
-                        if let Some(child_in_map) = map.get_mut(&note_id) {
-                            let _ = child_in_map.wait().await;
+                        tokio::select! {
+                            _ = child.wait() => {
+                                log_info!("Note window process id={} exited", note_id);
+                            }
+                            _ = kill_rx => {
+                                log_info!("Note window process id={} kill requested", note_id);
+                                let _ = child.kill().await;
+                            }
                         }
+                        let mut map = running_notes_clone.lock().await;
                         map.remove(&note_id);
-                        log_info!("Note window process id={} exited, removed from tracking", note_id);
                     });
                 }
                 Err(e) => {
@@ -298,30 +302,35 @@ async fn spawn_all_notes(state: Arc<DaemonState>) -> Result<(), Box<dyn std::err
 }
 
 fn spawn_note_process(state: &Arc<DaemonState>, id: i64) -> std::io::Result<()> {
-    let child = spawn_note_process_internal(id)?;
+    let mut child = spawn_note_process_internal(id)?;
+    let (kill_tx, kill_rx) = tokio::sync::oneshot::channel::<()>();
     let running_notes_clone = state.running_notes.clone();
     
     // Insert into map inside a task to avoid blocking sync function
     let state_clone = state.clone();
     tokio::spawn(async move {
         let mut map = state_clone.running_notes.lock().await;
-        let child_to_wait = child;
-        map.insert(id, child_to_wait);
+        map.insert(id, kill_tx);
         
         tokio::spawn(async move {
-            let mut map = running_notes_clone.lock().await;
-            if let Some(child_in_map) = map.get_mut(&id) {
-                let _ = child_in_map.wait().await;
+            tokio::select! {
+                _ = child.wait() => {
+                    log_info!("Note window process id={} exited", id);
+                }
+                _ = kill_rx => {
+                    log_info!("Note window process id={} kill requested", id);
+                    let _ = child.kill().await;
+                }
             }
+            let mut map = running_notes_clone.lock().await;
             map.remove(&id);
-            log_info!("Note window process id={} exited, removed from tracking", id);
         });
     });
 
     Ok(())
 }
 
-fn spawn_note_process_internal(id: i64) -> std::io::Result<Child> {
+fn spawn_note_process_internal(id: i64) -> std::io::Result<tokio::process::Child> {
     let bin_path = find_bin_path("stickyboard-note");
     log_info!("Spawning note process: {} --id {}", bin_path.display(), id);
     

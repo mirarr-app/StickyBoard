@@ -187,6 +187,7 @@ fn build_ui(app: &gtk::Application, id: i64) {
         .label("✕")
         .css_classes(vec!["top-bar-btn".to_string()])
         .focusable(false)
+        .receives_default(false)
         .build();
 
     // Drag spacer
