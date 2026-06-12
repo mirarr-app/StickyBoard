@@ -10,7 +10,7 @@ use crate::{log_error, log_info};
 const NOTE_CSS: &str = "
 window {
     background-color: transparent;
-    font-family: 'Shadows Into Light Two', sans-serif;
+    font-family: 'Excalifont', sans-serif;
 }
 .note-container {
     border-radius: 8px;
@@ -28,7 +28,7 @@ window {
 .note-text-view {
     background-color: transparent;
     color: inherit;
-    font-family: 'Shadows Into Light Two', sans-serif;
+    font-family: 'Excalifont', sans-serif;
     font-size: 16px;
     line-height: 1.4;
 }
@@ -47,7 +47,7 @@ window {
     color: inherit;
     opacity: 0.6;
     font-weight: bold;
-    font-family: 'Shadows Into Light Two', sans-serif;
+    font-family: 'Excalifont', sans-serif;
 }
 .top-bar-btn:hover {
     background: rgba(0, 0, 0, 0.08);

@@ -49,10 +49,10 @@ pub fn find_bin_path(bin_name: &str) -> PathBuf {
     PathBuf::from(bin_name)
 }
 
-/// Ensures that the custom font ShadowsIntoLightTwo-Regular.ttf is copied to the user's local fonts directory
+/// Ensures that the custom font excalifont.woff2 is copied to the user's local fonts directory
 /// and cached with fontconfig so that GTK can load it.
 pub fn ensure_font_installed() {
-    let font_name = "ShadowsIntoLightTwo-Regular.ttf";
+    let font_name = "excalifont.woff2";
     let user_fonts_dir = dirs::data_dir()
         .map(|d| d.join("fonts"))
         .unwrap_or_else(|| {
