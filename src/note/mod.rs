@@ -7,69 +7,88 @@ use std::rc::Rc;
 use crate::ipc::{send_ipc_request, IpcRequest, IpcResponse};
 use crate::{log_error, log_info};
 
-const NOTE_CSS: &str = "
-window {
-    background-color: transparent;
-    font-family: 'Excalifont', sans-serif;
-}
-.note-container {
-    border-radius: 8px;
-    border: 1px solid rgba(0, 0, 0, 0.1);
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-    padding: 10px;
-    background-clip: padding-box;
-}
-.note-yellow { background-color: #fef3c7; color: #78350f; }
-.note-blue { background-color: #dbeafe; color: #1e3a8a; }
-.note-green { background-color: #d1fae5; color: #065f46; }
-.note-pink { background-color: #fce7f3; color: #831843; }
-.note-orange { background-color: #ffedd5; color: #7c2d12; }
-
-.note-text-view {
-    background-color: transparent;
-    color: inherit;
-    font-family: 'Excalifont', sans-serif;
-    font-size: 16px;
-    line-height: 1.4;
-}
-.note-text-view text {
-    background-color: transparent;
+thread_local! {
+    static CSS_PROVIDER: std::cell::RefCell<Option<gtk::CssProvider>> = std::cell::RefCell::new(None);
 }
 
-.top-bar {
-    margin-bottom: 4px;
-}
-.top-bar-btn {
-    background: transparent;
-    border: none;
-    padding: 4px 8px;
-    border-radius: 4px;
-    color: inherit;
-    opacity: 0.6;
-    font-weight: bold;
-    font-family: 'Excalifont', sans-serif;
-}
-.top-bar-btn:hover {
-    background: rgba(0, 0, 0, 0.08);
-    opacity: 0.9;
-}
+fn get_note_css() -> String {
+    let colors = crate::config::ThemeColors::load();
+    format!(
+        "
+        window {{
+            background-color: transparent;
+            font-family: 'Excalifont', sans-serif;
+        }}
+        .note-container {{
+            border-radius: 8px;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            padding: 10px;
+            background-clip: padding-box;
+        }}
+        .note-yellow {{ background-color: {yellow_bg}; color: {yellow_fg}; }}
+        .note-blue {{ background-color: {blue_bg}; color: {blue_fg}; }}
+        .note-green {{ background-color: {green_bg}; color: {green_fg}; }}
+        .note-pink {{ background-color: {pink_bg}; color: {pink_fg}; }}
+        .note-orange {{ background-color: {orange_bg}; color: {orange_fg}; }}
 
-.color-popover-box {
-    padding: 6px;
+        .note-text-view {{
+            background-color: transparent;
+            color: inherit;
+            font-family: 'Excalifont', sans-serif;
+            font-size: 16px;
+            line-height: 1.4;
+        }}
+        .note-text-view text {{
+            background-color: transparent;
+        }}
+
+        .top-bar {{
+            margin-bottom: 4px;
+        }}
+        .top-bar-btn {{
+            background: transparent;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            color: inherit;
+            opacity: 0.6;
+            font-weight: bold;
+            font-family: 'Excalifont', sans-serif;
+        }}
+        .top-bar-btn:hover {{
+            background: rgba(0, 0, 0, 0.08);
+            opacity: 0.9;
+        }}
+
+        .color-popover-box {{
+            padding: 6px;
+        }}
+        .color-circle {{
+            min-width: 24px;
+            min-height: 24px;
+            border-radius: 50%;
+            border: 1px solid rgba(0, 0, 0, 0.2);
+            margin: 4px;
+        }}
+        .color-circle.yellow {{ background-color: {yellow_bg}; }}
+        .color-circle.blue {{ background-color: {blue_bg}; }}
+        .color-circle.green {{ background-color: {green_bg}; }}
+        .color-circle.pink {{ background-color: {pink_bg}; }}
+        .color-circle.orange {{ background-color: {orange_bg}; }}
+        ",
+        yellow_bg = colors.yellow_bg,
+        yellow_fg = colors.yellow_fg,
+        blue_bg = colors.blue_bg,
+        blue_fg = colors.blue_fg,
+        green_bg = colors.green_bg,
+        green_fg = colors.green_fg,
+        pink_bg = colors.pink_bg,
+        pink_fg = colors.pink_fg,
+        orange_bg = colors.orange_bg,
+        orange_fg = colors.orange_fg,
+    )
 }
-.color-circle {
-    min-width: 24px;
-    min-height: 24px;
-    border-radius: 50%;
-    border: 1px solid rgba(0, 0, 0, 0.2);
-    margin: 4px;
-}
-.color-circle.yellow { background-color: #fef3c7; }
-.color-circle.blue { background-color: #dbeafe; }
-.color-circle.green { background-color: #d1fae5; }
-.color-circle.pink { background-color: #fce7f3; }
-.color-circle.orange { background-color: #ffedd5; }
-";
 
 struct NoteState {
     id: i64,
@@ -119,7 +138,7 @@ pub fn run() {
 
 fn load_css() {
     let provider = gtk::CssProvider::new();
-    provider.load_from_data(NOTE_CSS);
+    provider.load_from_data(&get_note_css());
     if let Some(display) = gdk::Display::default() {
         gtk::style_context_add_provider_for_display(
             &display,
@@ -127,6 +146,18 @@ fn load_css() {
             gtk::STYLE_PROVIDER_PRIORITY_APPLICATION,
         );
     }
+    CSS_PROVIDER.with(|p| {
+        *p.borrow_mut() = Some(provider);
+    });
+}
+
+fn reload_css() {
+    CSS_PROVIDER.with(|p| {
+        if let Some(provider) = p.borrow().as_ref() {
+            provider.load_from_data(&get_note_css());
+            log_info!("Omarchy theme change detected. StickyBoard CSS reloaded.");
+        }
+    });
 }
 
 fn build_ui(app: &gtk::Application, id: i64) {
@@ -294,13 +325,32 @@ fn build_ui(app: &gtk::Application, id: i64) {
     );
 }
 
+fn get_theme_mtime() -> Option<std::time::SystemTime> {
+    let home = std::env::var("HOME").ok()?;
+    let path = std::path::PathBuf::from(home)
+        .join(".config")
+        .join("omarchy")
+        .join("current")
+        .join("theme")
+        .join("colors.toml");
+    std::fs::metadata(path).and_then(|m| m.modified()).ok()
+}
+
 /// Periodic job checking window position/size and updating the DB.
 fn start_position_tracking(state: Rc<NoteState>, text_view_weak: glib::WeakRef<gtk::TextView>) {
     let note_id = state.id;
+    let last_mtime = Cell::new(get_theme_mtime());
     
     glib::timeout_add_local(
         std::time::Duration::from_secs(1),
         move || {
+            // Check if theme changed
+            let current_mtime = get_theme_mtime();
+            if current_mtime != last_mtime.get() {
+                last_mtime.set(current_mtime);
+                reload_css();
+            }
+
             let title = format!("stickyboard-note-{}", note_id);
             if let Ok(Some(client)) = crate::hyprland::find_client_by_title(&title) {
                 let curr_x = client.at[0];

@@ -5,35 +5,44 @@ use gdk4 as gdk;
 use crate::ipc::{send_ipc_request, IpcRequest, IpcResponse};
 use crate::config::{DEFAULT_COLOR, DEFAULT_HEIGHT, DEFAULT_WIDTH};
 
-const CAPTURE_CSS: &str = "
-window {
-    background-color: transparent;
-    font-family: 'Excalifont', sans-serif;
+fn get_capture_css() -> String {
+    let colors = crate::config::ThemeColors::load();
+    let bg_rgba = crate::config::hex_to_rgba(&colors.background, 0.95);
+    let border_rgba = crate::config::hex_to_rgba(&colors.accent, 0.2);
+    let hint_rgba = crate::config::hex_to_rgba(&colors.foreground, 0.6);
+    format!(
+        "
+        window {{
+            background-color: transparent;
+            font-family: 'Excalifont', sans-serif;
+        }}
+        .capture-container {{
+            background-color: {};
+            border-radius: 12px;
+            border: 1px solid {};
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
+            padding: 16px;
+        }}
+        .capture-text-view {{
+            background-color: transparent;
+            color: {};
+            font-family: 'Excalifont', sans-serif;
+            font-size: 16px;
+            line-height: 1.4;
+        }}
+        .capture-text-view text {{
+            background-color: transparent;
+        }}
+        .capture-hint {{
+            color: {};
+            font-family: 'Excalifont', sans-serif;
+            font-size: 12px;
+            margin-top: 8px;
+        }}
+        ",
+        bg_rgba, border_rgba, colors.foreground, hint_rgba
+    )
 }
-.capture-container {
-    background-color: rgba(24, 24, 27, 0.95);
-    border-radius: 12px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
-    padding: 16px;
-}
-.capture-text-view {
-    background-color: transparent;
-    color: #f4f4f5;
-    font-family: 'Excalifont', sans-serif;
-    font-size: 16px;
-    line-height: 1.4;
-}
-.capture-text-view text {
-    background-color: transparent;
-}
-.capture-hint {
-    color: #a1a1aa;
-    font-family: 'Excalifont', sans-serif;
-    font-size: 12px;
-    margin-top: 8px;
-}
-";
 
 pub fn run() {
     crate::config::ensure_font_installed();
@@ -56,7 +65,7 @@ pub fn run() {
 
 fn load_css() {
     let provider = gtk::CssProvider::new();
-    provider.load_from_data(CAPTURE_CSS);
+    provider.load_from_data(&get_capture_css());
     if let Some(display) = gdk::Display::default() {
         gtk::style_context_add_provider_for_display(
             &display,
