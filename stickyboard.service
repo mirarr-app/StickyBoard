@@ -1,0 +1,14 @@
+[Unit]
+Description=StickyBoard Daemon - Corkboard sticky notes manager
+After=graphical-session.target
+PartOf=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/stickyboard daemon
+Restart=on-failure
+RestartSec=2
+Environment=RUST_BACKTRACE=1
+
+[Install]
+WantedBy=default.target

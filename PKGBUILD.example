@@ -1,0 +1,30 @@
+# Maintainer: Parsa <parsa@example.com>
+pkgname=stickyboard
+pkgver=0.1.0
+pkgrel=1
+pkgdesc="A lightweight, floating sticky note corkboard system for Hyprland workspace 6"
+arch=('x86_64')
+url="https://github.com/example/stickyboard"
+license=('MIT')
+depends=('gtk4' 'sqlite')
+makedepends=('cargo')
+source=("git+https://github.com/example/stickyboard.git")
+sha256sums=('SKIP')
+
+build() {
+  cd "${srcdir}/${pkgname}"
+  cargo build --release --locked
+}
+
+package() {
+  cd "${srcdir}/${pkgname}"
+  
+  # Install executables
+  install -Dm755 target/release/stickyboard "${pkgdir}"/usr/bin/stickyboard
+  install -Dm755 target/release/stickyboard-daemon "${pkgdir}"/usr/bin/stickyboard-daemon
+  install -Dm755 target/release/stickyboard-capture "${pkgdir}"/usr/bin/stickyboard-capture
+  install -Dm755 target/release/stickyboard-note "${pkgdir}"/usr/bin/stickyboard-note
+  
+  # Install systemd user service unit
+  install -Dm644 stickyboard.service "${pkgdir}"/usr/lib/systemd/user/stickyboard.service
+}

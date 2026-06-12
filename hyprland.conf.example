@@ -1,0 +1,20 @@
+# StickyBoard - Example Hyprland Configuration
+# Append this to ~/.config/hypr/hyprland.conf
+
+# Global hotkey to trigger the capture popup (SUPER+N)
+bind = SUPER, N, exec, stickyboard capture
+
+# Note Windows Rules (com.stickyboard.note*)
+# Direct all notes to workspace 6, make them float and pin them across monitor transitions
+windowrulev2 = workspace 6,class:^(com.stickyboard.note.*)$
+windowrulev2 = float,class:^(com.stickyboard.note.*)$
+windowrulev2 = pin,class:^(com.stickyboard.note.*)$
+windowrulev2 = noanim,class:^(com.stickyboard.note.*)$
+
+# Capture Popup Window Rules
+# Float the capture window, center it, and force focus for instant typing
+windowrulev2 = float,class:^(com.stickyboard.capture)$
+windowrulev2 = center,class:^(com.stickyboard.capture)$
+windowrulev2 = stayfocused,class:^(com.stickyboard.capture)$
+windowrulev2 = pin,class:^(com.stickyboard.capture)$
+windowrulev2 = dimaround,class:^(com.stickyboard.capture)$
