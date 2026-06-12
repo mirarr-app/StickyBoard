@@ -8,7 +8,7 @@ StickyBoard is built using GTK4, SQLite, Tokio, and native Hyprland IPC.
 
 ## Features
 
-- **Instant Note Capture**: Press `SUPER+N` to open a centered input popup, type your note, and hit `Enter` to spawn it instantly.
+- **Instant Note Capture**: Press `SUPER+SHIFT+K` to open a centered input popup, type your note, and hit `Enter` to spawn it instantly.
 - **Dedicated Corkboard**: Automatically routes and manages all note windows on workspace 6.
 - **Autosave & Geometry Recovery**: Changes to text, positions, and sizes are autosaved and survive system reboots or Hyprland/daemon restarts.
 - **Customizable Color Themes**: Easily switch note colors among amber yellow, blue, emerald green, pink, and orange.
@@ -71,7 +71,7 @@ systemctl --user enable --now stickyboard.service
 1. Append the window rules from [hyprland.conf.example](file:///home/parsa/Work/osticky/hyprland.conf.example) to your `~/.config/hypr/hyprland.conf` (directs note windows to workspace 6, makes them floating, and configures the capture popup).
 2. Add the global hotkey binding to your Omarchy keybindings configuration file at `~/.config/hypr/bindings.conf`:
    ```hyprland
-   bindd = SUPER, N, Launch StickyBoard Capture, exec, stickyboard capture
+   bindd = SUPER SHIFT, K, Launch StickyBoard Capture, exec, stickyboard capture
    ```
 
 Run `hyprctl reload` to apply rules.
