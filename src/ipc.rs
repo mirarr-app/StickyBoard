@@ -18,6 +18,7 @@ pub enum IpcRequest {
     },
     DeleteNote {
         id: i64,
+        from_window: bool,
     },
     UpdateNote {
         id: i64,

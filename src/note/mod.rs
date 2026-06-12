@@ -186,6 +186,7 @@ fn build_ui(app: &gtk::Application, id: i64) {
     let delete_btn = gtk::Button::builder()
         .label("✕")
         .css_classes(vec!["top-bar-btn".to_string()])
+        .focusable(false)
         .build();
 
     // Drag spacer
@@ -227,7 +228,7 @@ fn build_ui(app: &gtk::Application, id: i64) {
     let window_weak = window.downgrade();
     let note_id = state.id;
     delete_btn.connect_clicked(move |_| {
-        let req = IpcRequest::DeleteNote { id: note_id };
+        let req = IpcRequest::DeleteNote { id: note_id, from_window: true };
         match send_ipc_request(&req) {
             Ok(IpcResponse::Ok) => {
                 log_info!("Note id={} delete confirmed by daemon, closing window.", note_id);

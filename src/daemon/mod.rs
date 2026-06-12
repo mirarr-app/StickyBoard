@@ -159,15 +159,17 @@ async fn process_request(request: IpcRequest, state: Arc<DaemonState>) -> IpcRes
                 }
             }
         }
-        IpcRequest::DeleteNote { id } => {
+        IpcRequest::DeleteNote { id, from_window } => {
             let mut db = state.db.lock().await;
             match db.delete_note(id) {
                 Ok(_) => {
-                    log_info!("Deleted note id={}", id);
-                    // Kill the child window process
+                    log_info!("Deleted note id={} (from_window={})", id, from_window);
+                    // Kill the child window process only if it is not the window itself closing
                     let mut running = state.running_notes.lock().await;
                     if let Some(mut child) = running.remove(&id) {
-                        let _ = child.kill().await;
+                        if !from_window {
+                            let _ = child.kill().await;
+                        }
                     }
                     IpcResponse::Ok
                 }
