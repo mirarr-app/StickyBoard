@@ -10,7 +10,7 @@ use stickyboard::ipc::{send_ipc_request, IpcRequest, IpcResponse};
 #[command(
     name = "stickyboard",
     about = "StickyBoard - Corkboard sticky notes system for Hyprland",
-    version = "0.1.0"
+    version = env!("CARGO_PKG_VERSION")
 )]
 struct Cli {
     #[command(subcommand)]
