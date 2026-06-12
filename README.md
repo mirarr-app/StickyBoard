@@ -68,10 +68,11 @@ systemctl --user enable --now stickyboard.service
 ```
 
 ### 3. Add Hyprland Configurations
-Append the contents of [hyprland.conf.example](file:///home/parsa/Work/osticky/hyprland.conf.example) to your `~/.config/hypr/hyprland.conf`:
-- Binds `SUPER+N` to spawn `stickyboard capture`.
-- Places note windows on workspace 6 as floating and pinned.
-- Styles and centers the capture popup.
+1. Append the window rules from [hyprland.conf.example](file:///home/parsa/Work/osticky/hyprland.conf.example) to your `~/.config/hypr/hyprland.conf` (directs note windows to workspace 6, makes them floating, and configures the capture popup).
+2. Add the global hotkey binding to your Omarchy keybindings configuration file at `~/.config/hypr/bindings.conf`:
+   ```hyprland
+   bindd = SUPER, N, Launch StickyBoard Capture, exec, stickyboard capture
+   ```
 
 Run `hyprctl reload` to apply rules.
 
