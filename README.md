@@ -102,3 +102,9 @@ The `stickyboard` binary controls all operations:
 - **Database**: `~/.local/share/stickyboard/notes.db`
 - **IPC Unix Domain Socket**: `/run/user/<uid>/stickyboard.sock` (session-bound)
 - **Local Logs**: Systemd journal logs (view using `journalctl --user -u stickyboard.service`)
+
+---
+
+## Credits
+
+- **Excalifont**: The default handwriting style font of the application. Designed and provided by the [Excalidraw team](https://plus.excalidraw.com/excalifont).
