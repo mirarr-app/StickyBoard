@@ -112,7 +112,7 @@ pub fn run() {
         build_ui(app, id);
     });
 
-    app.run_with_args(&args);
+    app.run_with_args(&[args[0].clone()]);
 }
 
 fn load_css() {
