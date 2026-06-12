@@ -1,6 +1,6 @@
 # StickyBoard
 
-StickyBoard is a lightweight, production-quality sticky notes system designed specifically for Arch Linux, Wayland, and Hyprland. It transforms Hyprland workspace 6 into a persistent corkboard of floating, borderless sticky notes.
+StickyBoard is a lightweight sticky notes system designed specifically for Omarchy. It transforms a Hyprland workspace (6 by default) into a persistent corkboard of floating sticky notes.
 
 StickyBoard is built using GTK4, SQLite, Tokio, and native Hyprland IPC.
 
@@ -12,8 +12,6 @@ StickyBoard is built using GTK4, SQLite, Tokio, and native Hyprland IPC.
 - **Dedicated Corkboard**: Automatically routes and manages all note windows on workspace 6.
 - **Geometry Recovery**: Changes to note positions and sizes are autosaved and survive system reboots or Hyprland/daemon restarts. Notes are read-only and static once created to keep workspace 6 clean.
 - **Omarchy System Theme Integration**: Note colors are loaded dynamically from your active Omarchy system theme (`~/.config/omarchy/current/theme/colors.toml`) and hot-reload instantly when the theme is changed.
-- **Custom App Font**: Bundles and automatically installs the handwriting-style `Excalifont` (`excalifont.woff2`) for premium, state-of-the-art aesthetics.
-- **Minimalist Design**: Zero title bars or menu bars, transparent backgrounds, rounded corners, and smooth interactions.
 
 ---
 
