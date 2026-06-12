@@ -10,8 +10,9 @@ StickyBoard is built using GTK4, SQLite, Tokio, and native Hyprland IPC.
 
 - **Instant Note Capture**: Press `SUPER+SHIFT+K` to open a centered input popup, type your note, and hit `Enter` to spawn it instantly.
 - **Dedicated Corkboard**: Automatically routes and manages all note windows on workspace 6.
-- **Autosave & Geometry Recovery**: Changes to text, positions, and sizes are autosaved and survive system reboots or Hyprland/daemon restarts.
-- **Customizable Color Themes**: Easily switch note colors among amber yellow, blue, emerald green, pink, and orange.
+- **Geometry Recovery**: Changes to note positions and sizes are autosaved and survive system reboots or Hyprland/daemon restarts. Notes are read-only and static once created to keep workspace 6 clean.
+- **Omarchy System Theme Integration**: Note colors are loaded dynamically from your active Omarchy system theme (`~/.config/omarchy/current/theme/colors.toml`) and hot-reload instantly when the theme is changed.
+- **Custom App Font**: Bundles and automatically installs the handwriting-style `Excalifont` (`excalifont.woff2`) for premium, state-of-the-art aesthetics.
 - **Minimalist Design**: Zero title bars or menu bars, transparent backgrounds, rounded corners, and smooth interactions.
 
 ---
@@ -88,7 +89,7 @@ The `stickyboard` binary controls all operations:
 - **Hide all note windows**: `stickyboard hide`
 - **Reload notes**: `stickyboard reload`
 - **Add a new note**:
-  - Arguments: `stickyboard new --text "My text" --color "blue"`
+  - Arguments: `stickyboard new --text "My text"`
   - Stdin stream: `echo "Clean my room" | stickyboard new`
 - **List notes**: `stickyboard list`
 - **Export notes**: `stickyboard export notes.json`
