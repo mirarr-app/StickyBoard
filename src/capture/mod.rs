@@ -1,8 +1,6 @@
 use gtk4 as gtk;
 use gtk::prelude::*;
 use gdk4 as gdk;
-use std::cell::RefCell;
-use std::rc::Rc;
 
 use crate::ipc::{send_ipc_request, IpcRequest, IpcResponse};
 use crate::config::{DEFAULT_COLOR, DEFAULT_HEIGHT, DEFAULT_WIDTH};
@@ -90,7 +88,6 @@ fn build_ui(app: &gtk::Application) {
     let text_view = gtk::TextView::builder()
         .wrap_mode(gtk::WrapMode::WordChar)
         .css_classes(vec!["capture-text-view".to_string()])
-        .placeholder_text("Type a quick note...")
         .build();
 
     scrolled_window.set_child(Some(&text_view));

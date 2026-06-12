@@ -5,7 +5,6 @@ use std::cell::{Cell, RefCell};
 use std::rc::Rc;
 
 use crate::ipc::{send_ipc_request, IpcRequest, IpcResponse};
-use crate::config::find_bin_path;
 use crate::{log_error, log_info};
 
 const NOTE_CSS: &str = "
@@ -175,7 +174,9 @@ fn build_ui(app: &gtk::Application, id: i64) {
         ])
         .build();
 
-    // Top Bar (controls & drag area)
+    // Top Bar (controls & drag area) wrapped in a WindowHandle
+    let top_bar_handle = gtk::WindowHandle::new();
+
     let top_bar = gtk::Box::builder()
         .orientation(gtk::Orientation::Horizontal)
         .css_classes(vec!["top-bar".to_string()])
@@ -202,7 +203,8 @@ fn build_ui(app: &gtk::Application, id: i64) {
     top_bar.append(&color_btn);
     top_bar.append(&drag_spacer);
     top_bar.append(&delete_btn);
-    container.append(&top_bar);
+    top_bar_handle.set_child(Some(&top_bar));
+    container.append(&top_bar_handle);
 
     // Text editor area
     let scrolled = gtk::ScrolledWindow::builder()
@@ -224,27 +226,7 @@ fn build_ui(app: &gtk::Application, id: i64) {
 
     // --- Wire events ---
 
-    // 1. Window Drag Event
-    let drag_gesture = gtk::GestureClick::new();
-    let window_weak = window.downgrade();
-    drag_gesture.connect_pressed(move |gesture, _, _, _| {
-        if gesture.current_button() == gdk::BUTTON_PRIMARY {
-            if let Some(win) = window_weak.upgrade() {
-                if let Some(sequence) = gesture.current_sequence() {
-                    if let Some(event) = gesture.last_event(Some(&sequence)) {
-                        if let Some(device) = event.device() {
-                            win.begin_move_drag(
-                                gdk::BUTTON_PRIMARY as i32,
-                                &device,
-                                Some(&sequence),
-                            );
-                        }
-                    }
-                }
-            }
-        }
-    });
-    drag_spacer.add_controller(drag_gesture);
+    // 1. Window Drag (handled automatically by GtkWindowHandle)
 
     // 2. Color Popover picker
     let popover = gtk::Popover::new();
@@ -337,21 +319,22 @@ fn build_ui(app: &gtk::Application, id: i64) {
         let state_sub = state_clone.clone();
         let view_weak = text_view_weak.clone();
 
+        let state_closure = state_sub.clone();
         let source_id = glib::timeout_add_local(
             std::time::Duration::from_millis(500),
             move || {
                 if let Some(view) = view_weak.upgrade() {
                     let text = get_text_view_content(&view);
-                    state_sub.text.replace(text.clone());
+                    state_closure.text.replace(text.clone());
 
                     send_update_ipc(
-                        state_sub.id,
+                        state_closure.id,
                         &text,
-                        &state_sub.color.borrow(),
-                        state_sub.pos_x.get(),
-                        state_sub.pos_y.get(),
-                        state_sub.width.get(),
-                        state_sub.height.get(),
+                        &state_closure.color.borrow(),
+                        state_closure.pos_x.get(),
+                        state_closure.pos_y.get(),
+                        state_closure.width.get(),
+                        state_closure.height.get(),
                     );
                 }
                 glib::ControlFlow::Break

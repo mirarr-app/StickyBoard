@@ -6,7 +6,7 @@ use tokio::net::{UnixListener, UnixStream};
 use tokio::process::Child;
 use tokio::sync::Mutex;
 
-use crate::config::{find_bin_path, get_socket_path, DEFAULT_COLOR, DEFAULT_HEIGHT, DEFAULT_WIDTH};
+use crate::config::{find_bin_path, get_socket_path};
 use crate::db::Db;
 use crate::ipc::{IpcRequest, IpcResponse};
 use crate::{log_error, log_info};
@@ -265,7 +265,7 @@ async fn spawn_all_notes(state: Arc<DaemonState>) -> Result<(), Box<dyn std::err
                     let running_notes_clone = state.running_notes.clone();
                     
                     // Spawn supervisor task
-                    let mut child_to_wait = child;
+                    let child_to_wait = child;
                     running.insert(note_id, child_to_wait);
                     
                     // We must spawn a task to wait on the child so we clean up when it exits
@@ -295,7 +295,7 @@ fn spawn_note_process(state: &Arc<DaemonState>, id: i64) -> std::io::Result<()> 
     let state_clone = state.clone();
     tokio::spawn(async move {
         let mut map = state_clone.running_notes.lock().await;
-        let mut child_to_wait = child;
+        let child_to_wait = child;
         map.insert(id, child_to_wait);
         
         tokio::spawn(async move {
