@@ -1,0 +1,35 @@
+[package]
+name = "stickyboard"
+version = "0.1.0"
+edition = "2021"
+authors = ["Parsa <parsa@example.com>"]
+description = "A lightweight sticky note system for Hyprland"
+
+[dependencies]
+gtk4 = { package = "gtk4", version = "0.9" }
+gdk4 = { package = "gdk4", version = "0.9" }
+glib = { version = "0.20" }
+tokio = { version = "1.36", features = ["full"] }
+rusqlite = { version = "0.31", features = ["bundled"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+clap = { version = "4.4", features = ["derive"] }
+dirs = "5.0"
+chrono = { version = "0.4", features = ["serde"] }
+once_cell = "1.19"
+
+[[bin]]
+name = "stickyboard"
+path = "src/bin/stickyboard.rs"
+
+[[bin]]
+name = "stickyboard-daemon"
+path = "src/bin/stickyboard-daemon.rs"
+
+[[bin]]
+name = "stickyboard-capture"
+path = "src/bin/stickyboard-capture.rs"
+
+[[bin]]
+name = "stickyboard-note"
+path = "src/bin/stickyboard-note.rs"
