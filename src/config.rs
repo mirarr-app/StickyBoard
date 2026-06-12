@@ -35,3 +35,16 @@ pub fn get_socket_path() -> PathBuf {
     // Fallback to app directory
     get_app_dir().join(format!("{}.sock", APP_NAME))
 }
+
+/// Finds the path to a sibling binary or falls back to system PATH.
+pub fn find_bin_path(bin_name: &str) -> PathBuf {
+    if let Ok(current_exe) = std::env::current_exe() {
+        if let Some(parent) = current_exe.parent() {
+            let local_bin = parent.join(bin_name);
+            if local_bin.exists() {
+                return local_bin;
+            }
+        }
+    }
+    PathBuf::from(bin_name)
+}
