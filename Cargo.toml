@@ -2,7 +2,8 @@
 name = "stickyboard"
 version = "0.1.0"
 edition = "2021"
-authors = ["Parsa <parsa@example.com>"]
+authors = ["mirarr-app"]
+repository = "https://github.com/mirarr-app/StickyBoard"
 description = "A lightweight sticky note system for Hyprland"
 
 [dependencies]
