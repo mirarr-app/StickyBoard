@@ -8,6 +8,7 @@ use crate::config::{DEFAULT_COLOR, DEFAULT_HEIGHT, DEFAULT_WIDTH};
 const CAPTURE_CSS: &str = "
 window {
     background-color: transparent;
+    font-family: 'Shadows Into Light Two', sans-serif;
 }
 .capture-container {
     background-color: rgba(24, 24, 27, 0.95);
@@ -19,22 +20,23 @@ window {
 .capture-text-view {
     background-color: transparent;
     color: #f4f4f5;
-    font-family: 'Inter', 'Outfit', 'Sans', sans-serif;
-    font-size: 14px;
-    line-height: 1.5;
+    font-family: 'Shadows Into Light Two', sans-serif;
+    font-size: 16px;
+    line-height: 1.4;
 }
 .capture-text-view text {
     background-color: transparent;
 }
 .capture-hint {
     color: #a1a1aa;
-    font-family: 'Inter', sans-serif;
-    font-size: 11px;
+    font-family: 'Shadows Into Light Two', sans-serif;
+    font-size: 12px;
     margin-top: 8px;
 }
 ";
 
 pub fn run() {
+    crate::config::ensure_font_installed();
     let app = gtk::Application::builder()
         .application_id("com.stickyboard.capture")
         .build();

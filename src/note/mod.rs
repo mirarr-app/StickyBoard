@@ -10,6 +10,7 @@ use crate::{log_error, log_info};
 const NOTE_CSS: &str = "
 window {
     background-color: transparent;
+    font-family: 'Shadows Into Light Two', sans-serif;
 }
 .note-container {
     border-radius: 8px;
@@ -27,9 +28,9 @@ window {
 .note-text-view {
     background-color: transparent;
     color: inherit;
-    font-family: 'Inter', 'Outfit', 'Sans', sans-serif;
-    font-size: 13px;
-    line-height: 1.5;
+    font-family: 'Shadows Into Light Two', sans-serif;
+    font-size: 16px;
+    line-height: 1.4;
 }
 .note-text-view text {
     background-color: transparent;
@@ -46,6 +47,7 @@ window {
     color: inherit;
     opacity: 0.6;
     font-weight: bold;
+    font-family: 'Shadows Into Light Two', sans-serif;
 }
 .top-bar-btn:hover {
     background: rgba(0, 0, 0, 0.08);
@@ -80,6 +82,7 @@ struct NoteState {
 }
 
 pub fn run() {
+    crate::config::ensure_font_installed();
     // Parse note ID from command line arguments
     let mut note_id: Option<i64> = None;
     let args: Vec<String> = std::env::args().collect();

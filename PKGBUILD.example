@@ -27,4 +27,7 @@ package() {
   
   # Install systemd user service unit
   install -Dm644 stickyboard.service "${pkgdir}"/usr/lib/systemd/user/stickyboard.service
+
+  # Install default app font
+  install -Dm644 ShadowsIntoLightTwo-Regular.ttf "${pkgdir}"/usr/share/fonts/TTF/ShadowsIntoLightTwo-Regular.ttf
 }

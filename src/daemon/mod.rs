@@ -18,6 +18,7 @@ pub struct DaemonState {
 
 pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
     log_info!("Starting StickyBoard daemon...");
+    crate::config::ensure_font_installed();
 
     // Initialize Database
     let db = match Db::open() {
