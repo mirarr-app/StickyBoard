@@ -6,3 +6,4 @@ pub mod hyprland;
 pub mod ipc;
 pub mod daemon;
 pub mod capture;
+pub mod note;
