@@ -6,15 +6,23 @@ bind = SUPER, N, exec, stickyboard capture
 
 # Note Windows Rules (com.stickyboard.note*)
 # Direct all notes to workspace 6, make them float and pin them across monitor transitions
-windowrulev2 = workspace 6,class:^(com.stickyboard.note.*)$
-windowrulev2 = float,class:^(com.stickyboard.note.*)$
-windowrulev2 = pin,class:^(com.stickyboard.note.*)$
-windowrulev2 = noanim,class:^(com.stickyboard.note.*)$
+windowrule {
+    name = stickyboard-notes
+    match:class = com\.stickyboard\.note.*
+    workspace = 6
+    float = on
+    pin = on
+    no_anim = on
+}
 
 # Capture Popup Window Rules
 # Float the capture window, center it, and force focus for instant typing
-windowrulev2 = float,class:^(com.stickyboard.capture)$
-windowrulev2 = center,class:^(com.stickyboard.capture)$
-windowrulev2 = stayfocused,class:^(com.stickyboard.capture)$
-windowrulev2 = pin,class:^(com.stickyboard.capture)$
-windowrulev2 = dimaround,class:^(com.stickyboard.capture)$
+windowrule {
+    name = stickyboard-capture
+    match:class = com\.stickyboard\.capture
+    float = on
+    center = on
+    stay_focused = on
+    pin = on
+    dim_around = on
+}
