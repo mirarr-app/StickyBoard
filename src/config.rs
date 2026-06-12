@@ -50,10 +50,10 @@ pub fn find_bin_path(bin_name: &str) -> PathBuf {
     PathBuf::from(bin_name)
 }
 
-/// Ensures that the custom font Excalifont-Regular.woff2 is copied to the user's local fonts directory
+/// Ensures that the custom font Excalifont-Regular.ttf is copied to the user's local fonts directory
 /// and cached with fontconfig so that GTK can load it.
 pub fn ensure_font_installed() {
-    let font_name = "Excalifont-Regular.woff2";
+    let font_name = "Excalifont-Regular.ttf";
     let user_fonts_dir = dirs::data_dir()
         .map(|d| d.join("fonts"))
         .unwrap_or_else(|| {
