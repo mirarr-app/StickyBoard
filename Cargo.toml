@@ -1,6 +1,6 @@
 [package]
 name = "stickyboard"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 authors = ["mirarr-app"]
 repository = "https://github.com/mirarr-app/StickyBoard"

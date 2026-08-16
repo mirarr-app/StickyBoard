@@ -18,7 +18,7 @@ curl -sL https://raw.githubusercontent.com/mirarr-app/StickyBoard/main/install.s
 - **Instant Note Capture**: Press `SUPER+SHIFT+K` to open a centered input popup, type your note, and hit `Enter` to spawn it instantly.
 - **Dedicated Corkboard**: Automatically routes and manages all note windows on workspace 6 by default.
 - **Geometry Recovery**: Changes to note positions and sizes are autosaved and survive system reboots or Hyprland/daemon restarts. Notes are read-only and static once created to keep workspace clean.
-- **Omarchy System Theme Integration**: Note colors are loaded dynamically from your active Omarchy system theme (`~/.config/omarchy/current/theme/colors.toml`) and hot-reload instantly when the theme is changed.
+- **Omarchy System Theme Integration**: Note colors are loaded dynamically from your active Omarchy system theme (`~/.local/state/omarchy/current/theme/colors.toml`, falling back to `~/.config/omarchy/current/theme/colors.toml`) and hot-reload instantly when the theme is changed.
 
 
 
@@ -65,10 +65,15 @@ This produces the following binaries in `target/release/`:
 
 ### 1. Install Binaries
 #### Option A: Build from Source
-Compile the binaries and copy them manually:
+Run the build-from-source installation script to compile, install binaries, fonts, window rules, keybindings, and start the service:
+```bash
+./build-from-source.sh
+```
+Or compile manually:
 ```bash
 cargo build --release
-sudo cp target/release/stickyboard* /usr/bin/
+mkdir -p ~/.local/bin
+cp target/release/stickyboard target/release/stickyboard-daemon target/release/stickyboard-capture target/release/stickyboard-note ~/.local/bin/
 ```
 Alternatively, customize the provided `PKGBUILD.example` to build and install StickyBoard as an Arch package.
 
@@ -83,7 +88,8 @@ Alternatively, to install manually:
 2. Extract the archive and copy components:
    ```bash
    tar -xzvf stickyboard-linux-x86_64.tar.gz
-   sudo cp stickyboard stickyboard-daemon stickyboard-capture stickyboard-note /usr/bin/
+   mkdir -p ~/.local/bin
+   cp stickyboard stickyboard-daemon stickyboard-capture stickyboard-note ~/.local/bin/
 
    # Install the bundled default font
    mkdir -p ~/.local/share/fonts
@@ -101,10 +107,10 @@ systemctl --user enable --now stickyboard.service
 ```
 
 ### 3. Add Hyprland Configurations
-1. Append the window rules from [hyprland.conf.example](file:///home/parsa/Work/osticky/hyprland.conf.example) to your `~/.config/hypr/hyprland.conf` (directs note windows to workspace 6, makes them floating, and configures the capture popup).
-2. Add the global hotkey binding to your Omarchy keybindings configuration file at `~/.config/hypr/bindings.conf`:
-   ```hyprland
-   bindd = SUPER SHIFT, K, Launch StickyBoard Capture, exec, stickyboard-capture
+1. Append the window rules from [hyprland.lua.example](file:///home/parsa/Work/osticky/hyprland.lua.example) to your `~/.config/hypr/autostart.lua` (directs note windows to workspace 6, makes them floating, and configures the capture popup).
+2. Add the global hotkey binding to your Omarchy keybindings configuration file at `~/.config/hypr/bindings.lua`:
+   ```lua
+   o.bind("SUPER + SHIFT + K", "Launch StickyBoard Capture", "stickyboard-capture")
    ```
 
 Run `hyprctl reload` to apply rules.
@@ -134,6 +140,19 @@ The `stickyboard` binary controls all operations:
 - **Database**: `~/.local/share/stickyboard/notes.db`
 - **IPC Unix Domain Socket**: `/run/user/<uid>/stickyboard.sock` (session-bound)
 - **Local Logs**: Systemd journal logs (view using `journalctl --user -u stickyboard.service`)
+
+---
+
+## Uninstallation
+
+To uninstall StickyBoard:
+```bash
+./uninstall.sh
+```
+To also purge the notes database and app data directory:
+```bash
+./uninstall.sh --purge
+```
 
 ---
 

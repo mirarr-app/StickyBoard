@@ -5,7 +5,7 @@ PartOf=graphical-session.target
 
 [Service]
 Type=simple
-ExecStart=/usr/bin/stickyboard daemon
+ExecStart=%h/.local/bin/stickyboard daemon
 Restart=on-failure
 RestartSec=2
 Environment=RUST_BACKTRACE=1

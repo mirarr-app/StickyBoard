@@ -338,7 +338,5 @@ fn spawn_note_process_internal(id: i64) -> std::io::Result<tokio::process::Child
     tokio::process::Command::new(bin_path)
         .arg("--id")
         .arg(id.to_string())
-        .stdout(std::process::Stdio::null())
-        .stderr(std::process::Stdio::null())
         .spawn()
 }

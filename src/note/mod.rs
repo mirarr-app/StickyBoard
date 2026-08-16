@@ -153,11 +153,55 @@ fn load_css() {
 
 fn reload_css() {
     CSS_PROVIDER.with(|p| {
-        if let Some(provider) = p.borrow().as_ref() {
-            provider.load_from_data(&get_note_css());
-            log_info!("Omarchy theme change detected. StickyBoard CSS reloaded.");
+        let new_provider = gtk::CssProvider::new();
+        new_provider.load_from_data(&get_note_css());
+        if let Some(display) = gdk::Display::default() {
+            if let Some(old_provider) = p.borrow().as_ref() {
+                gtk::style_context_remove_provider_for_display(&display, old_provider);
+            }
+            gtk::style_context_add_provider_for_display(
+                &display,
+                &new_provider,
+                gtk::STYLE_PROVIDER_PRIORITY_APPLICATION,
+            );
         }
+        *p.borrow_mut() = Some(new_provider);
+        log_info!("Omarchy theme change detected. StickyBoard CSS reloaded.");
     });
+}
+
+fn get_theme_fingerprint() -> String {
+    let home = std::env::var("HOME").unwrap_or_default();
+    let theme_name = if !home.is_empty() {
+        std::fs::read_to_string(std::path::Path::new(&home).join(".local/state/omarchy/current/theme.name"))
+            .unwrap_or_default()
+    } else {
+        String::new()
+    };
+
+    let colors_content = if let Some(path) = crate::config::ThemeColors::theme_path() {
+        std::fs::read_to_string(path).unwrap_or_default()
+    } else {
+        String::new()
+    };
+
+    format!("{}:{}", theme_name.trim(), colors_content)
+}
+
+fn start_theme_watcher() {
+    let last_fingerprint = RefCell::new(get_theme_fingerprint());
+
+    glib::timeout_add_local(
+        std::time::Duration::from_millis(500),
+        move || {
+            let current_fingerprint = get_theme_fingerprint();
+            if *last_fingerprint.borrow() != current_fingerprint {
+                *last_fingerprint.borrow_mut() = current_fingerprint;
+                reload_css();
+            }
+            glib::ControlFlow::Continue
+        },
+    );
 }
 
 fn build_ui(app: &gtk::Application, id: i64) {
@@ -287,8 +331,12 @@ fn build_ui(app: &gtk::Application, id: i64) {
 
     window.present();
 
+    // Start live theme watcher for hot-reloading theme CSS
+    start_theme_watcher();
+
     // 5. Hyprland placement mapping loop
     let state_clone = state.clone();
+    let text_view_downgrade = text_view.downgrade();
     let mut mapping_tries = 0;
     
     // Read starting target coordinates
@@ -303,6 +351,7 @@ fn build_ui(app: &gtk::Application, id: i64) {
             mapping_tries += 1;
             if mapping_tries > 20 {
                 log_error!("Mapping timed out. Hyprland client for note id={} was not found.", id);
+                start_position_tracking(state_clone.clone(), text_view_downgrade.clone());
                 return glib::ControlFlow::Break;
             }
 
@@ -311,7 +360,7 @@ fn build_ui(app: &gtk::Application, id: i64) {
                     log_info!("Note window id={} successfully positioned on Hyprland.", id);
                     
                     // Start position tracking only AFTER successful placement
-                    start_position_tracking(state_clone.clone(), text_view.downgrade());
+                    start_position_tracking(state_clone.clone(), text_view_downgrade.clone());
                     glib::ControlFlow::Break
                 }
                 Ok(false) => {
@@ -320,6 +369,7 @@ fn build_ui(app: &gtk::Application, id: i64) {
                 }
                 Err(e) => {
                     log_error!("Error positioning note window id={} on Hyprland: {}", id, e);
+                    start_position_tracking(state_clone.clone(), text_view_downgrade.clone());
                     glib::ControlFlow::Break
                 }
             }
@@ -327,32 +377,13 @@ fn build_ui(app: &gtk::Application, id: i64) {
     );
 }
 
-fn get_theme_mtime() -> Option<std::time::SystemTime> {
-    let home = std::env::var("HOME").ok()?;
-    let path = std::path::PathBuf::from(home)
-        .join(".config")
-        .join("omarchy")
-        .join("current")
-        .join("theme")
-        .join("colors.toml");
-    std::fs::metadata(path).and_then(|m| m.modified()).ok()
-}
-
 /// Periodic job checking window position/size and updating the DB.
 fn start_position_tracking(state: Rc<NoteState>, text_view_weak: glib::WeakRef<gtk::TextView>) {
     let note_id = state.id;
-    let last_mtime = Cell::new(get_theme_mtime());
     
     glib::timeout_add_local(
         std::time::Duration::from_secs(1),
         move || {
-            // Check if theme changed
-            let current_mtime = get_theme_mtime();
-            if current_mtime != last_mtime.get() {
-                last_mtime.set(current_mtime);
-                reload_css();
-            }
-
             let title = format!("stickyboard-note-{}", note_id);
             if let Ok(Some(client)) = crate::hyprland::find_client_by_title(&title) {
                 let curr_x = client.at[0];

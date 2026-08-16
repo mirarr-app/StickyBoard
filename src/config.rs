@@ -202,74 +202,227 @@ impl ThemeColors {
         }
     }
 
-    pub fn load() -> Self {
-        let mut colors = Self::default_colors();
-        let home = std::env::var("HOME").unwrap_or_default();
-        if home.is_empty() {
-            return colors;
+    /// Resolves the theme file path given a home directory path.
+    /// Checks `<home>/.local/state/omarchy/current/theme/colors.toml` first (new Omarchy location),
+    /// and falls back to `<home>/.config/omarchy/current/theme/colors.toml` (legacy location).
+    pub fn resolve_theme_path(home: &std::path::Path) -> PathBuf {
+        let new_path = home
+            .join(".local")
+            .join("state")
+            .join("omarchy")
+            .join("current")
+            .join("theme")
+            .join("colors.toml");
+
+        if new_path.exists() {
+            return new_path;
         }
-        let toml_path = PathBuf::from(home)
+
+        let old_path = home
             .join(".config")
             .join("omarchy")
             .join("current")
             .join("theme")
             .join("colors.toml");
 
+        if old_path.exists() {
+            return old_path;
+        }
+
+        new_path
+    }
+
+    /// Returns the path to the Omarchy theme colors file.
+    /// Checks `~/.local/state/omarchy/current/theme/colors.toml` first (new Omarchy location),
+    /// and falls back to `~/.config/omarchy/current/theme/colors.toml` (legacy location).
+    pub fn theme_path() -> Option<PathBuf> {
+        let home = std::env::var("HOME").ok()?;
+        if home.is_empty() {
+            return None;
+        }
+        Some(Self::resolve_theme_path(std::path::Path::new(&home)))
+    }
+
+    pub fn parse(content: &str) -> Self {
+        let mut colors = Self::default_colors();
+        let mut map = HashMap::new();
+        for line in content.lines() {
+            let trimmed = line.trim();
+            if trimmed.starts_with('#') || trimmed.is_empty() {
+                continue;
+            }
+            if let Some(pos) = trimmed.find('=') {
+                let key = trimmed[..pos].trim();
+                let val = trimmed[pos + 1..].trim().trim_matches('"').trim_matches('\'').trim();
+                map.insert(key.to_string(), val.to_string());
+            }
+        }
+
+        if let Some(bg) = map.get("background") {
+            colors.background = bg.clone();
+        }
+        if let Some(fg) = map.get("foreground") {
+            colors.foreground = fg.clone();
+        }
+        if let Some(accent) = map.get("accent") {
+            colors.accent = accent.clone();
+        }
+
+        // Map theme colors to note colors (supporting both named colors and ANSI indices)
+        let yellow_bg = map
+            .get("yellow")
+            .or_else(|| map.get("bright_yellow"))
+            .or_else(|| map.get("color3"))
+            .or_else(|| map.get("color11"))
+            .cloned()
+            .unwrap_or_else(|| "#fef3c7".to_string());
+        let yellow_fg = if is_light_color(&yellow_bg) { "#1a1a1a".to_string() } else { "#f8f9fa".to_string() };
+        colors.yellow_bg = yellow_bg;
+        colors.yellow_fg = yellow_fg;
+
+        let blue_bg = map
+            .get("blue")
+            .or_else(|| map.get("bright_blue"))
+            .or_else(|| map.get("color4"))
+            .or_else(|| map.get("color12"))
+            .cloned()
+            .unwrap_or_else(|| "#dbeafe".to_string());
+        let blue_fg = if is_light_color(&blue_bg) { "#1a1a1a".to_string() } else { "#f8f9fa".to_string() };
+        colors.blue_bg = blue_bg;
+        colors.blue_fg = blue_fg;
+
+        let green_bg = map
+            .get("green")
+            .or_else(|| map.get("bright_green"))
+            .or_else(|| map.get("color2"))
+            .or_else(|| map.get("color10"))
+            .cloned()
+            .unwrap_or_else(|| "#d1fae5".to_string());
+        let green_fg = if is_light_color(&green_bg) { "#1a1a1a".to_string() } else { "#f8f9fa".to_string() };
+        colors.green_bg = green_bg;
+        colors.green_fg = green_fg;
+
+        let pink_bg = map
+            .get("pink")
+            .or_else(|| map.get("magenta"))
+            .or_else(|| map.get("bright_magenta"))
+            .or_else(|| map.get("color5"))
+            .or_else(|| map.get("color13"))
+            .cloned()
+            .unwrap_or_else(|| "#fce7f3".to_string());
+        let pink_fg = if is_light_color(&pink_bg) { "#1a1a1a".to_string() } else { "#f8f9fa".to_string() };
+        colors.pink_bg = pink_bg;
+        colors.pink_fg = pink_fg;
+
+        let orange_bg = map
+            .get("orange")
+            .or_else(|| map.get("red"))
+            .or_else(|| map.get("bright_orange"))
+            .or_else(|| map.get("bright_red"))
+            .or_else(|| map.get("color1"))
+            .or_else(|| map.get("color9"))
+            .cloned()
+            .unwrap_or_else(|| "#ffedd5".to_string());
+        let orange_fg = if is_light_color(&orange_bg) { "#1a1a1a".to_string() } else { "#f8f9fa".to_string() };
+        colors.orange_bg = orange_bg;
+        colors.orange_fg = orange_fg;
+
+        colors
+    }
+
+    pub fn load() -> Self {
+        let toml_path = match Self::theme_path() {
+            Some(p) => p,
+            None => return Self::default_colors(),
+        };
+
         if !toml_path.exists() {
-            return colors;
+            return Self::default_colors();
         }
 
         if let Ok(content) = fs::read_to_string(&toml_path) {
-            let mut map = HashMap::new();
-            for line in content.lines() {
-                let trimmed = line.trim();
-                if trimmed.starts_with('#') || trimmed.is_empty() {
-                    continue;
-                }
-                if let Some(pos) = trimmed.find('=') {
-                    let key = trimmed[..pos].trim();
-                    let val = trimmed[pos + 1..].trim().trim_matches('"').trim_matches('\'').trim();
-                    map.insert(key.to_string(), val.to_string());
-                }
-            }
-
-            if let Some(bg) = map.get("background") {
-                colors.background = bg.clone();
-            }
-            if let Some(fg) = map.get("foreground") {
-                colors.foreground = fg.clone();
-            }
-            if let Some(accent) = map.get("accent") {
-                colors.accent = accent.clone();
-            }
-
-            // Map ANSI colors to note colors
-            let yellow_bg = map.get("color3").or_else(|| map.get("color11")).cloned().unwrap_or_else(|| "#fef3c7".to_string());
-            let yellow_fg = if is_light_color(&yellow_bg) { "#1a1a1a".to_string() } else { "#f8f9fa".to_string() };
-            colors.yellow_bg = yellow_bg;
-            colors.yellow_fg = yellow_fg;
-
-            let blue_bg = map.get("color4").or_else(|| map.get("color12")).cloned().unwrap_or_else(|| "#dbeafe".to_string());
-            let blue_fg = if is_light_color(&blue_bg) { "#1a1a1a".to_string() } else { "#f8f9fa".to_string() };
-            colors.blue_bg = blue_bg;
-            colors.blue_fg = blue_fg;
-
-            let green_bg = map.get("color2").or_else(|| map.get("color10")).cloned().unwrap_or_else(|| "#d1fae5".to_string());
-            let green_fg = if is_light_color(&green_bg) { "#1a1a1a".to_string() } else { "#f8f9fa".to_string() };
-            colors.green_bg = green_bg;
-            colors.green_fg = green_fg;
-
-            let pink_bg = map.get("color5").or_else(|| map.get("color13")).cloned().unwrap_or_else(|| "#fce7f3".to_string());
-            let pink_fg = if is_light_color(&pink_bg) { "#1a1a1a".to_string() } else { "#f8f9fa".to_string() };
-            colors.pink_bg = pink_bg;
-            colors.pink_fg = pink_fg;
-
-            let orange_bg = map.get("color1").or_else(|| map.get("color9")).cloned().unwrap_or_else(|| "#ffedd5".to_string());
-            let orange_fg = if is_light_color(&orange_bg) { "#1a1a1a".to_string() } else { "#f8f9fa".to_string() };
-            colors.orange_bg = orange_bg;
-            colors.orange_fg = orange_fg;
+            Self::parse(&content)
+        } else {
+            Self::default_colors()
         }
+    }
+}
 
-        colors
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_theme_colors_parse_named() {
+        let sample = r##"
+            background = "#000000"
+            foreground = "#ffffff"
+            accent = "#8d8d8d"
+            yellow = "#cecece"
+            blue = "#8d8d8d"
+            green = "#b6b6b6"
+            magenta = "#9b9b9b"
+            orange = "#b9b9b9"
+        "##;
+        let colors = ThemeColors::parse(sample);
+        assert_eq!(colors.background, "#000000");
+        assert_eq!(colors.foreground, "#ffffff");
+        assert_eq!(colors.accent, "#8d8d8d");
+        assert_eq!(colors.yellow_bg, "#cecece");
+        assert_eq!(colors.blue_bg, "#8d8d8d");
+        assert_eq!(colors.green_bg, "#b6b6b6");
+        assert_eq!(colors.pink_bg, "#9b9b9b");
+        assert_eq!(colors.orange_bg, "#b9b9b9");
+    }
+
+    #[test]
+    fn test_theme_colors_parse_ansi() {
+        let sample = r##"
+            background = "#000000"
+            foreground = "#ffffff"
+            accent = "#ff00ff"
+            color3 = "#ffff00"
+            color4 = "#0000ff"
+        "##;
+        let colors = ThemeColors::parse(sample);
+        assert_eq!(colors.background, "#000000");
+        assert_eq!(colors.foreground, "#ffffff");
+        assert_eq!(colors.accent, "#ff00ff");
+        assert_eq!(colors.yellow_bg, "#ffff00");
+        assert_eq!(colors.blue_bg, "#0000ff");
+    }
+
+    #[test]
+    fn test_theme_path_resolution() {
+        if let Some(path) = ThemeColors::theme_path() {
+            assert!(path.ends_with("colors.toml"));
+        }
+    }
+
+    #[test]
+    fn test_theme_path_fallback_logic() {
+        let temp_dir = std::env::temp_dir().join(format!("osticky_test_{}", std::process::id()));
+        let _ = fs::remove_dir_all(&temp_dir);
+
+        let new_theme_dir = temp_dir.join(".local").join("state").join("omarchy").join("current").join("theme");
+        let old_theme_dir = temp_dir.join(".config").join("omarchy").join("current").join("theme");
+
+        let new_file = new_theme_dir.join("colors.toml");
+        let old_file = old_theme_dir.join("colors.toml");
+
+        // 1. Neither exists -> returns new path by default
+        assert_eq!(ThemeColors::resolve_theme_path(&temp_dir), new_file);
+
+        // 2. Only legacy path exists -> fallback to old path
+        fs::create_dir_all(&old_theme_dir).unwrap();
+        fs::write(&old_file, "background = '#111111'").unwrap();
+        assert_eq!(ThemeColors::resolve_theme_path(&temp_dir), old_file);
+
+        // 3. Both exist -> prefers new path
+        fs::create_dir_all(&new_theme_dir).unwrap();
+        fs::write(&new_file, "background = '#222222'").unwrap();
+        assert_eq!(ThemeColors::resolve_theme_path(&temp_dir), new_file);
+
+        let _ = fs::remove_dir_all(&temp_dir);
     }
 }

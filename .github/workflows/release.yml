@@ -49,7 +49,9 @@ jobs:
           cp target/release/stickyboard-note dist/
           cp Excalifont-Regular.ttf dist/
           cp stickyboard.service dist/
+          cp hyprland.lua.example dist/
           cp hyprland.conf.example dist/
+          cp uninstall.sh dist/
           cp README.md dist/
           tar -czf stickyboard-linux-x86_64.tar.gz -C dist .
 
