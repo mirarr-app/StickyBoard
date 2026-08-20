@@ -19,19 +19,14 @@ mkdir -p ~/.local/share/fonts
 cp Excalifont-Regular.ttf ~/.local/share/fonts/
 fc-cache -f ~/.local/share/fonts/
 
-# Append Hyprland configurations
-echo "Adding Hyprland window rules to autostart.lua..."
-mkdir -p ~/.config/hypr
-touch ~/.config/hypr/autostart.lua
-if [ -f "hyprland.lua.example" ]; then
-    cat hyprland.lua.example >> ~/.config/hypr/autostart.lua
-elif [ -f "hyprland.conf.example" ]; then
-    cat hyprland.conf.example >> ~/.config/hypr/autostart.lua
-fi
+# Install Hyprland 0.55+ Lua window rules and capture hotkey
+# shellcheck disable=SC1091
+source "$SCRIPT_DIR/install-hyprland-config.sh"
+install_stickyboard_hyprland_config "$SCRIPT_DIR/hyprland.lua.example"
 
-echo "Adding keyboard shortcut to bindings.lua..."
-touch ~/.config/hypr/bindings.lua
-echo -e '\no.bind("SUPER + SHIFT + K", "Launch StickyBoard Capture", "stickyboard-capture")' >> ~/.config/hypr/bindings.lua
+# shellcheck disable=SC1091
+source "$SCRIPT_DIR/install-omarchy-plugin.sh"
+install_stickyboard_omarchy_plugin "$SCRIPT_DIR/omarchy-plugin"
 
 # Setup Systemd user service
 echo "Configuring Systemd user service..."

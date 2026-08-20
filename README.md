@@ -6,7 +6,7 @@ StickyBoard is built using GTK4, SQLite, Tokio, and native Hyprland IPC.
 
 ### Omarchy Quick Install
 
-Install all binaries, default fonts, systemd user services, and automatically configure keybindings and window rules in a single command:
+Install all binaries, default fonts, systemd user services, Hyprland Lua rules, and the Omarchy bar plugin in a single command:
 ```bash
 curl -sL https://raw.githubusercontent.com/mirarr-app/StickyBoard/main/install.sh | bash
 ```
@@ -44,6 +44,8 @@ Ensure the following packages are installed on your Arch system:
 ```bash
 sudo pacman -S rust gtk4 sqlite
 ```
+
+StickyBoard targets **Hyprland 0.55+** (Lua config). Window rules, keybinds, and IPC dispatchers use the Lua API (`hl.window_rule`, `hl.dsp.window.move` / `resize`).
 
 ---
 
@@ -107,13 +109,23 @@ systemctl --user enable --now stickyboard.service
 ```
 
 ### 3. Add Hyprland Configurations
-1. Append the window rules from [hyprland.lua.example](file:///home/parsa/Work/osticky/hyprland.lua.example) to your `~/.config/hypr/autostart.lua` (directs note windows to workspace 6, makes them floating, and configures the capture popup).
-2. Add the global hotkey binding to your Omarchy keybindings configuration file at `~/.config/hypr/bindings.lua`:
+
+Hyprland 0.55+ uses Lua (`~/.config/hypr/hyprland.lua`). The install scripts copy [hyprland.lua.example](hyprland.lua.example) to `~/.config/hypr/stickyboard.lua` and load it from `hyprland.lua`.
+
+To configure it manually:
+
+1. Copy [hyprland.lua.example](hyprland.lua.example) to `~/.config/hypr/stickyboard.lua` (routes notes to workspace 6, floats them, and configures the capture popup plus `SUPER+SHIFT+K`).
+2. Load it from `~/.config/hypr/hyprland.lua`:
    ```lua
-   o.bind("SUPER + SHIFT + K", "Launch StickyBoard Capture", "stickyboard-capture")
+   require("hypr.stickyboard")  -- Omarchy
+   -- require("stickyboard")    -- vanilla Hyprland
    ```
 
-Run `hyprctl reload` to apply rules.
+Run `hyprctl reload`, then `hyprctl configerrors` to confirm the config loaded cleanly.
+
+### 4. Omarchy Shell Plugin
+
+The installer also drops a Quickshell bar widget at `~/.config/omarchy/plugins/stickyboard.notes/` and enables it on the right side of the bar. Click the note icon to compose a sticky; Enter saves it through the StickyBoard daemon. The popup uses Omarchy `Color` / `Style` tokens, so it follows the active theme.
 
 ---
 

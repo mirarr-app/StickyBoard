@@ -47,69 +47,61 @@ if [ -f ~/.local/share/fonts/Excalifont-Regular.ttf ]; then
 fi
 
 # 5. Clean up Hyprland window rules and keybindings
-echo "Cleaning up Hyprland configuration files..."
-python3 - << 'PYEOF' 2>/dev/null || true
-import re, os
-
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if [ -f "$SCRIPT_DIR/install-hyprland-config.sh" ]; then
+    # shellcheck disable=SC1091
+    source "$SCRIPT_DIR/install-hyprland-config.sh"
+    uninstall_stickyboard_hyprland_config
+else
+    echo "Cleaning up Hyprland configuration files..."
+    rm -f ~/.config/hypr/stickyboard.lua
+    python3 - << 'PYEOF' 2>/dev/null || true
+import os, re
 home = os.path.expanduser("~")
 
-def clean_file(path, patterns):
+def clean(path, patterns):
     if not os.path.exists(path):
         return
     with open(path, "r") as f:
         content = f.read()
-    for pattern, repl in patterns:
-        content = re.sub(pattern, repl, content, flags=re.IGNORECASE)
+    for pattern in patterns:
+        content = re.sub(pattern, "", content, flags=re.I | re.M)
     content = re.sub(r"\n{3,}", "\n\n", content).strip() + "\n"
     with open(path, "w") as f:
         f.write(content)
 
-# Autostart Lua
-autostart_lua = os.path.join(home, ".config/hypr/autostart.lua")
-clean_file(autostart_lua, [
-    (r"--\s*StickyBoard[^\n]*\n?", ""),
-    (r"--\s*Note Windows Rules[^\n]*\n?", ""),
-    (r"--\s*Capture Popup Window Rules[^\n]*\n?", ""),
-    (r"--\s*Direct all notes[^\n]*\n?", ""),
-    (r"--\s*Float the capture window[^\n]*\n?", ""),
-    (r"--\s*Append this to[^\n]*\n?", ""),
-    (r"o\.window\s*\(\s*[\"'][^\"']*stickyboard[^\"']*[\"']\s*,\s*\{[\s\S]*?\}\s*\)\s*", ""),
-])
-
-# Autostart Conf
-autostart_conf = os.path.join(home, ".config/hypr/autostart.conf")
-clean_file(autostart_conf, [
-    (r"#\s*StickyBoard[^\n]*\n?", ""),
-    (r"#\s*Note Windows Rules[^\n]*\n?", ""),
-    (r"#\s*Capture Popup Window Rules[^\n]*\n?", ""),
-    (r"#\s*Direct all notes[^\n]*\n?", ""),
-    (r"#\s*Float the capture window[^\n]*\n?", ""),
-    (r"#\s*Append this to[^\n]*\n?", ""),
-    (r"windowrule\s*\{[\s\S]*?stickyboard[\s\S]*?\}\s*", ""),
-])
-
-# Bindings Lua & Conf
-bindings_lua = os.path.join(home, ".config/hypr/bindings.lua")
-clean_file(bindings_lua, [
-    (r"o\.bind\s*\(\s*[\"'][^\"']*[\"']\s*,\s*[\"'][^\"']*stickyboard[^\"']*[\"'][^\n]*\n?", ""),
-    (r"o\.bind\s*\(\s*[\"'][^\"']*[\"']\s*,\s*[\"'][^\"']*[\"']\s*,\s*[\"'][^\"']*stickyboard[^\"']*[\"'][^\n]*\n?", ""),
-])
-
-bindings_conf = os.path.join(home, ".config/hypr/bindings.conf")
-clean_file(bindings_conf, [
-    (r"bind[a-z]*\s*=\s*[^\n]*stickyboard[^\n]*\n?", ""),
-])
+pats = [
+    r'^[ \t]*require\(\s*["\'](?:hypr\.)?stickyboard["\']\s*\)[^\n]*\n?',
+    r"^[ \t]*o\.bind\s*\([^\n]*stickyboard[^\n]*\n?",
+    r"^[ \t]*hl\.bind\s*\([^\n]*stickyboard[^\n]*\n?",
+    r"^[ \t]*bind[a-z]*\s*=\s*[^\n]*stickyboard[^\n]*\n?",
+]
+for rel in ("hypr/hyprland.lua", "hypr/autostart.lua", "hypr/bindings.lua",
+            "hypr/autostart.conf", "hypr/bindings.conf"):
+    clean(os.path.join(home, ".config", rel), pats)
 PYEOF
-
-# Reload Hyprland rules if hyprctl is available
-if command -v hyprctl >/dev/null 2>&1; then
-    hyprctl reload 2>/dev/null || true
+    if command -v hyprctl >/dev/null 2>&1; then
+        hyprctl reload 2>/dev/null || true
+    fi
 fi
 
-# 6. Remove runtime socket
+# 6. Remove Omarchy/Quickshell plugin
+if [ -f "$SCRIPT_DIR/install-omarchy-plugin.sh" ]; then
+    # shellcheck disable=SC1091
+    source "$SCRIPT_DIR/install-omarchy-plugin.sh"
+    uninstall_stickyboard_omarchy_plugin
+else
+    rm -rf ~/.config/omarchy/plugins/stickyboard.notes
+    if command -v omarchy-shell >/dev/null 2>&1; then
+        omarchy-shell shell setPluginEnabled stickyboard.notes false >/dev/null 2>&1 || true
+        omarchy-shell shell rescanPlugins >/dev/null 2>&1 || true
+    fi
+fi
+
+# 7. Remove runtime socket
 rm -f "${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/stickyboard.sock"
 
-# 7. Handle app data and notes database
+# 8. Handle app data and notes database
 if [ "$PURGE_DATA" -eq 1 ]; then
     echo "Purging StickyBoard data directory (~/.local/share/stickyboard)..."
     rm -rf ~/.local/share/stickyboard

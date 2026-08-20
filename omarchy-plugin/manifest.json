@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "id": "stickyboard.notes",
+  "name": "StickyBoard",
+  "version": "1.0.0",
+  "author": "mirarr-app",
+  "license": "MIT",
+  "description": "Add a sticky note from the Omarchy bar",
+  "kinds": ["bar-widget"],
+  "entryPoints": {
+    "barWidget": "BarWidget.qml"
+  },
+  "barWidget": {
+    "displayName": "StickyBoard",
+    "description": "Compose a sticky note and send it to workspace 6",
+    "category": "Utilities",
+    "allowMultiple": false,
+    "defaultSection": "right"
+  }
+}

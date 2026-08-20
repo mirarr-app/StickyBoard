@@ -50,7 +50,9 @@ jobs:
           cp Excalifont-Regular.ttf dist/
           cp stickyboard.service dist/
           cp hyprland.lua.example dist/
-          cp hyprland.conf.example dist/
+          cp install-hyprland-config.sh dist/
+          cp install-omarchy-plugin.sh dist/
+          cp -r omarchy-plugin dist/
           cp uninstall.sh dist/
           cp README.md dist/
           tar -czf stickyboard-linux-x86_64.tar.gz -C dist .

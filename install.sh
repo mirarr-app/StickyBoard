@@ -19,19 +19,33 @@ mkdir -p ~/.local/share/fonts
 cp "$TMP_DIR"/Excalifont-Regular.ttf ~/.local/share/fonts/
 fc-cache -f ~/.local/share/fonts/
 
-# Append Hyprland configurations
-echo "Adding Hyprland window rules to autostart.lua..."
-mkdir -p ~/.config/hypr
-touch ~/.config/hypr/autostart.lua
-if [ -f "$TMP_DIR/hyprland.lua.example" ]; then
-    cat "$TMP_DIR/hyprland.lua.example" >> ~/.config/hypr/autostart.lua
-elif [ -f "$TMP_DIR/hyprland.conf.example" ]; then
-    cat "$TMP_DIR/hyprland.conf.example" >> ~/.config/hypr/autostart.lua
+# Install Hyprland 0.55+ Lua window rules and capture hotkey
+HELPER="$TMP_DIR/install-hyprland-config.sh"
+EXAMPLE="$TMP_DIR/hyprland.lua.example"
+if [ ! -f "$HELPER" ]; then
+    curl -sL "https://raw.githubusercontent.com/mirarr-app/StickyBoard/main/install-hyprland-config.sh" -o "$HELPER"
+    # Older release archives shipped hyprlang snippets; refresh the Lua example too.
+    curl -sL "https://raw.githubusercontent.com/mirarr-app/StickyBoard/main/hyprland.lua.example" -o "$EXAMPLE"
 fi
+# shellcheck disable=SC1090
+source "$HELPER"
+install_stickyboard_hyprland_config "$EXAMPLE"
 
-echo "Adding keyboard shortcut to bindings.lua..."
-touch ~/.config/hypr/bindings.lua
-echo -e '\no.bind("SUPER + SHIFT + K", "Launch StickyBoard Capture", "stickyboard-capture")' >> ~/.config/hypr/bindings.lua
+# Install Omarchy/Quickshell add-note plugin
+PLUGIN_SRC="$TMP_DIR/omarchy-plugin"
+PLUGIN_HELPER="$TMP_DIR/install-omarchy-plugin.sh"
+if [ ! -f "$PLUGIN_HELPER" ]; then
+    curl -sL "https://raw.githubusercontent.com/mirarr-app/StickyBoard/main/install-omarchy-plugin.sh" -o "$PLUGIN_HELPER"
+fi
+if [ ! -f "$PLUGIN_SRC/manifest.json" ]; then
+    mkdir -p "$PLUGIN_SRC"
+    for plugin_file in manifest.json BarWidget.qml Panel.qml add-note.sh; do
+        curl -sL "https://raw.githubusercontent.com/mirarr-app/StickyBoard/main/omarchy-plugin/${plugin_file}" -o "$PLUGIN_SRC/${plugin_file}"
+    done
+fi
+# shellcheck disable=SC1090
+source "$PLUGIN_HELPER"
+install_stickyboard_omarchy_plugin "$PLUGIN_SRC"
 
 # Setup Systemd user service
 echo "Configuring Systemd user service..."

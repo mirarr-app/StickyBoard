@@ -1,20 +1,36 @@
--- StickyBoard - Example Hyprland Configuration
--- Append this to ~/.config/hypr/autostart.lua (or ~/.config/hypr/hyprland.lua)
+-- StickyBoard - Hyprland 0.55+ Lua configuration
+-- Installed as ~/.config/hypr/stickyboard.lua
+-- Omarchy:  require("hypr.stickyboard")  from ~/.config/hypr/hyprland.lua
+-- Vanilla:  require("stickyboard")       from ~/.config/hypr/hyprland.lua
+--
+-- See https://wiki.hypr.land/Configuring/Basics/Window-Rules/
 
--- Note Windows Rules (com.stickyboard.note*)
--- Direct all notes to workspace 6, make them float and disable animation
-o.window("com\\.stickyboard\\.note.*", {
+-- Note windows (com.stickyboard.note*): workspace 6, floating, no open animation.
+hl.window_rule({
+  name = "stickyboard-notes",
+  match = { class = "com\\.stickyboard\\.note.*" },
   workspace = "6",
   float = true,
   no_anim = true,
 })
 
--- Capture Popup Window Rules
--- Float the capture window, center it, and force focus for instant typing
-o.window("com\\.stickyboard\\.capture", {
+-- Capture popup: float, center, keep focus for instant typing.
+hl.window_rule({
+  name = "stickyboard-capture",
+  match = { class = "com\\.stickyboard\\.capture" },
   float = true,
   center = true,
   stay_focused = true,
   pin = true,
   dim_around = true,
 })
+
+-- SUPER+SHIFT+K opens the capture popup.
+-- o.bind also lists the shortcut in Omarchy's keybindings menu.
+if type(o) == "table" and type(o.bind) == "function" then
+  o.bind("SUPER + SHIFT + K", "Launch StickyBoard Capture", "stickyboard-capture")
+else
+  hl.bind("SUPER + SHIFT + K", hl.dsp.exec_cmd("stickyboard-capture"), {
+    description = "Launch StickyBoard Capture",
+  })
+end

@@ -77,25 +77,23 @@ pub fn find_client_by_title(title: &str) -> std::io::Result<Option<HyprClient>> 
     Ok(None)
 }
 
+/// Hyprland 0.55+ Lua dispatcher for an absolute move/resize of a specific window.
+fn lua_dispatch_window(method: &str, x: i32, y: i32, address: &str) -> String {
+    format!(
+        r#"dispatch hl.dsp.window.{}({{ x = {}, y = {}, window = "address:{}" }})"#,
+        method, x, y, address
+    )
+}
+
 /// Positions a note window by its ID using Hyprland IPC.
 /// Returns Ok(true) if the window was found and positioned, Ok(false) if not found.
 pub fn position_note_window(id: i64, x: i32, y: i32, w: i32, h: i32) -> std::io::Result<bool> {
     let title = format!("stickyboard-note-{}", id);
     if let Some(client) = find_client_by_title(&title)? {
         let address = client.address;
-        // Move floating window to exact X Y
-        let move_cmd = format!("dispatch movewindowpixel exact {} {},address:{}", x, y, address);
-        // Resize floating window to exact W H
-        let resize_cmd = format!("dispatch resizewindowpixel exact {} {},address:{}", w, h, address);
-        
-        send_hyprland_cmd(&move_cmd)?;
-        send_hyprland_cmd(&resize_cmd)?;
-        
-        // Also ensure it is pinned (visible on all workspaces, or pinned in place)
-        // Note: the pin dispatcher toggles pin state or sets it.
-        // We rely on the window rule windowrulev2 = pin,class:^(stickyboard-note)$
-        // but can double enforce it if needed.
-        
+        // Hyprland 0.55+ Lua dispatchers. `relative` defaults to false (exact coords/size).
+        send_hyprland_cmd(&lua_dispatch_window("move", x, y, &address))?;
+        send_hyprland_cmd(&lua_dispatch_window("resize", w, h, &address))?;
         Ok(true)
     } else {
         Ok(false)
